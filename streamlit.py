@@ -2,12 +2,11 @@ import csv
 import json
 from jinja2 import Template
 import os
-import glob
+import sys
 # Define the CSV input file and JSON output file
-csv_file = 'sample.csv'
+csv_file = input("Enter Sample CSV file name ")+'.csv'
 json_file = 'output.json'
 template_file = 'template.json.j2'
-json_dummy ='json.json'
 
 # Initialize an empty list to store the data
 data = []
@@ -51,71 +50,56 @@ with open('output.json', 'r') as input_file:
 
 print("JSON file is created, please validated...!!!")
 
-def list_files_recursively(folder_path):
+# function to regressively check for file in brunt repository
+def list_files_recursively(folder_path,suite_name):
     file_names = []
     for root, _, files in os.walk(folder_path):
         for file_name in files:
-            file_names.append(file_name)
-    return file_names
+            if file_name == suite_name:
+                print(f'File with JSON file name "{suite_name}" already exists. Skipping...')
+                return False
+    return True
 
 
 # File split logic 
-answer = input("Do you want to split file in brunt repository, Say yes or no ")
-if(answer == 'yes' or answer == 'YES' or answer == 'Yes') : 
-    folder_path = input("Enter the brunt repository test suite path here : ")  # Replace with the path to the folder you want to list files from
+repo_path = input("Enter the brunt repository test suite path here : ")  # Replace with the path to the folder you want to list files from
+module_folder = input("Enter module name of folder where you want to add JSON Test Suites ")
+folder_path = os.path.join(repo_path,'todo-cases/future-case')
+module_folder_path = os.path.join(folder_path, module_folder)
 
-    # List all files in the specified folder
-    file_names = list_files_recursively(folder_path)
-    # for file_name in file_names:
-    #     print(file_name)
-create_folder = input("Do you wish to create folder - yes or no")
+# Check if Module folder exist in brunt project 
 
+if(os.path.exists(module_folder_path)):
+    print(f'Found Module Folder named {module_folder}')
+else :
+    print("Seems like Module folder does not exist ....!!!")
+    should_create_new_folder = input("Do you want to Create Module Folder, Say yes or no ? ")
+
+    # create folder if user add yes in prompt 
+    if(should_create_new_folder == 'yes' or should_create_new_folder == 'YES' or should_create_new_folder == 'Yes'):
+        module_folder_name = input("Enter the name of the module Folder to be created ").lower()
+        path = os.path.join(folder_path, module_folder_name)
+        os.mkdir(path)
+    else :
+        # if user does not want to create module folder exit program
+        print("Exiting the program.")
+        sys.exit()
 
 for item in data:
     module_name = item["name"]
     module_name = module_name.replace(" ", "-").replace(",", "-").lower()  # Replace spaces with underscores
     new_filename = f"{module_name}.json"
-    file_path = os.path.join(folder_path, new_filename)
-
-    # Check if the file already exists
-    if os.path.isfile(file_path):
-        print(f'File with JSON file name "{new_filename}" already exists. Skipping...')
-    else:
+    is_file_exist = list_files_recursively(repo_path,new_filename)
+    if(is_file_exist):
+        file_path = os.path.join(folder_path, module_folder, new_filename)
         with open(file_path, "w") as outfile:
             json.dump(item, outfile, indent=4)
-        print(f'JSON data has been written to "{file_path}"')
+            print(f'JSON data has been written to "{new_filename}" ')
 
 
 
-
-for item in data:
-    module_name = item["name"]
-    module_name = module_name.replace(" ", "-").replace(",", "-").lower()  # Replace spaces with underscores
-    new_filename = f"{module_name}.json"
-    for if_file_exist in file_names:
-        if(if_file_exist == new_filename):
-            print(f'File with json file name {if_file_exist} ' + " already exist ")
-        else:
-            with open(new_filename, "w") as outfile:
-                json.dump(item, outfile, indent=4)
-    break
 
 
 
 # /Users/asmakhan/Desktop/brunt/todo-cases/future-case
 
-
-        #    if (create_folder == 'no' or create_folder == 'NO' or create_folder == 'No' ):
-        #         push_json_directory_path = os.path.join(folder_path, new_folder_name)
-        #         push_json_file_path = os.path.join(push_json_directory_path,new_filename)
-        #         with open(push_json_file_path, "w") as outfile:
-        #             json.dump(item, outfile, indent=4) 
-        #             print(f'JSON test suite for scenario {new_filename} created') 
-        #     elif (create_folder == 'Yes' or create_folder == 'YES' or create_folder == 'yes' ):
-        #         new_folder_name = input("Write name of folder to be created").replace(" ", "-").lower()
-        #         path = os.path.join(folder_path, new_folder_name)
-        #         if not os.path.exists(path):
-        #             os.mkdir(path)
-        #             os.chdir(path)
-        #             with open(file_name, "w") as outfile:
-        #                 json.dump(item, outfile, indent=4)
